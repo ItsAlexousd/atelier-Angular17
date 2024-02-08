@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { Recipe } from '../models/recipe';
-import { getFromResolvers } from '../../utility';
 
 @Component({
   selector: 'app-recipe-list',
@@ -8,7 +7,7 @@ import { getFromResolvers } from '../../utility';
   styleUrl: './recipe-list.component.css'
 })
 export class RecipeListComponent {
-  recipes?: Recipe[] = getFromResolvers<Recipe[]>('recipes');
+  @Input() recipes?: Recipe[];
 
   displayIdeas = false;
 }

@@ -1,15 +1,21 @@
 import { Component, DestroyRef, Input, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AbstractControl, UntypedFormArray, UntypedFormControl, UntypedFormGroup, ValidatorFn, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import {
+  AbstractControl,
+  UntypedFormArray,
+  UntypedFormControl,
+  UntypedFormGroup,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
+import { Router } from '@angular/router';
 import { Recipe, RecipeType, UnitOfMeasurement } from '../models/recipe';
 import { RecipeService } from '../services/recipe.service';
-import { getFromResolvers } from '../../utility';
 
 export function enumValidator(enumType: any): ValidatorFn {
   return (control: AbstractControl): { [key: string]: any } | null => {
     if (control.value && !Object.values(enumType).includes(control.value)) {
-      return { 'invalidEnumValue': { value: control.value } };
+      return { invalidEnumValue: { value: control.value } };
     }
     return null;
   };
@@ -23,13 +29,13 @@ export function enumValidator(enumType: any): ValidatorFn {
 
 // type InstructionForm = FormControl<string>;
 @Component({
-    selector: 'app-recipe-form',
-    templateUrl: './recipe-form.component.html',
-    styleUrl: './recipe-form.component.css'
+  selector: 'app-recipe-form',
+  templateUrl: './recipe-form.component.html',
+  styleUrl: './recipe-form.component.css',
 })
 export class RecipeFormComponent implements OnInit {
-  recipe?: Recipe = getFromResolvers<Recipe>('recipe');
-  
+  @Input() recipe?: Recipe;
+
   private recipeService = inject(RecipeService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
@@ -37,20 +43,20 @@ export class RecipeFormComponent implements OnInit {
   public formGroup = new UntypedFormGroup({
     id: new UntypedFormControl(null),
     name: new UntypedFormControl('', {
-      validators: [Validators.required, Validators.min(3)]
-    }), 
+      validators: [Validators.required, Validators.min(3)],
+    }),
     photo: new UntypedFormControl(''),
     type: new UntypedFormControl(RecipeType.None, {
-      validators: [Validators.required, enumValidator(RecipeType)]
+      validators: [Validators.required, enumValidator(RecipeType)],
     }),
     ingredients: new UntypedFormArray([]),
     instructions: new UntypedFormArray([]),
-    version: new UntypedFormControl('v2')
+    version: new UntypedFormControl('v2'),
   });
 
-  recipeTypes:Array<string> = Object.values(RecipeType); 
-  unitOfMeasure:Array<string> = Object.values(UnitOfMeasurement); 
-  
+  recipeTypes: Array<string> = Object.values(RecipeType);
+  unitOfMeasure: Array<string> = Object.values(UnitOfMeasurement);
+
   ngOnInit(): void {
     if (!this.recipe || this.recipe.version !== 'v2') return;
     this.recipe.ingredients.forEach(() => this.addIngredient());
@@ -62,14 +68,16 @@ export class RecipeFormComponent implements OnInit {
   }
 
   addIngredient(): void {
-    this.ingredientsForm.push(new UntypedFormGroup({
-      quantity: new UntypedFormControl(0),
-      name: new UntypedFormControl(''),
-      unit: new UntypedFormControl(UnitOfMeasurement.None)
-    }));
+    this.ingredientsForm.push(
+      new UntypedFormGroup({
+        quantity: new UntypedFormControl(0),
+        name: new UntypedFormControl(''),
+        unit: new UntypedFormControl(UnitOfMeasurement.None),
+      })
+    );
   }
 
-  removeIngredientAt(index: number) : void {
+  removeIngredientAt(index: number): void {
     this.ingredientsForm.removeAt(index);
   }
 
@@ -81,7 +89,7 @@ export class RecipeFormComponent implements OnInit {
     this.instructionsForm.push(new UntypedFormControl(''));
   }
 
-  removeInstructiontAt(index: number) : void {
+  removeInstructiontAt(index: number): void {
     this.instructionsForm.removeAt(index);
   }
 
@@ -92,15 +100,11 @@ export class RecipeFormComponent implements OnInit {
 
     let obs;
     if (!recipe) return;
-    if (!!recipe.id)
-      obs = this.recipeService.update(recipe.id, recipe);
-    else
-      obs = this.recipeService.create(recipe);
+    if (!!recipe.id) obs = this.recipeService.update(recipe.id, recipe);
+    else obs = this.recipeService.create(recipe);
 
-      obs.pipe(
-        takeUntilDestroyed(this.destroyRef)
-      ).subscribe(() => {
-        this.router.navigateByUrl('/recipes');
-      })
+    obs.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.router.navigateByUrl('/recipes');
+    });
   }
 }
